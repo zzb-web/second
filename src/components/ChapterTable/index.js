@@ -83,21 +83,23 @@ class ChapterTable extends React.Component{
                         <Button type="primary" style={{marginLeft:20}}>搜索</Button>
                         <Button type="primary" style={{marginLeft:120}}>暂存</Button>
                         <Button type="primary" style={{marginLeft:30}} onClick={this.submitHnadle.bind(this)}>提交</Button>
+
+                        <div className='prompt' style={this.state.showPrompt?{display:'block'}:{display:'none'}}>
+                            <div className='prompt-note'>
+                                <Icon type="exclamation-circle" />
+                                <span>请确定任务已完成</span>
+                            </div>
+                            <div className='prompt-info'>
+                                <span>提交后空格信息会自动填充</span>
+                            </div>
+                            <div className='prompt-btn'>
+                                <Button type="primary">确定</Button>
+                                <Button onClick={this.cancelHandle.bind(this)}>取消</Button>
+                            </div>
+                        </div>
                     </div>
                     <div className='notes'><span>注:如果下面一格等同于上面一格信息，可不填写，空格部分提交后系统会自动填充</span></div>
-                    <div className='prompt' style={this.state.showPrompt?{display:'block'}:{display:'none'}}>
-                        <div className='prompt-note'>
-                            <Icon type="exclamation-circle" />
-                            <span>请确定任务已完成</span>
-                        </div>
-                        <div className='prompt-info'>
-                            <span>提交后空格信息会自动填充</span>
-                        </div>
-                        <div className='prompt-btn'>
-                            <Button type="primary">确定</Button>
-                            <Button onClick={this.cancelHandle.bind(this)}>取消</Button>
-                        </div>
-                    </div>
+                   
                 </div>
                 <div className='table-content'>
                     <Tables columns={columns} data={data} showSizeChanger={false}/>
