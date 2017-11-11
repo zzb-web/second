@@ -1,0 +1,63 @@
+.control-area{
+    height: 50px;
+}
+.title{
+    float: left;
+    height: 40px;
+    line-height: 40px;
+}
+.content{
+    float: left;
+    height: 40px;
+    margin-left: 120px;
+    line-height: 40px;
+}
+.table-content{
+    clear: both;
+    width: 680px;
+    margin-top:60px;
+    margin-left: 80px;
+}
+.notes{
+    clear: both;
+    width: 270px;
+    font-weight: 600;
+}
+.prompt{
+    width: 248px;
+    height: 125px;
+    border: 1px solid #999;
+    border-radius: 5px;
+    position: absolute;
+    right: 290px;
+}
+.prompt>div{
+    height: 40px;
+}
+.prompt-note .anticon{
+    color: #ffbf00;
+    font-size: 22px;
+    top: 8px;
+    left: 10px;
+    position: absolute;
+}
+.prompt-note span{
+    font-size: 16px;
+    height: 40px;
+    line-height: 40px;
+    font-weight: 600;
+    margin-left: 40px;
+    color: #000;
+}
+.prompt-info span{
+    height: 40px;
+    font-size: 14px;
+    margin-left: 40px;
+    color: red;
+}
+.prompt-btn button:first-child {
+    margin-left: 40px;
+}
+.prompt-btn button:last-child {
+    margin-left: 15px;
+}
