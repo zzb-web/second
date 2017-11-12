@@ -12,14 +12,14 @@ async function Get(api){
   return data;
 }
 async function Post(url, param){
-  var status;
+  var data;
   await axios.post(url, param)
   .then(function (response) {
-   status = response.status;
+    data = response;
   })
   .catch(function (error) {
     console.log(error);
   });
-  return status;
+  return data;
 }
 export {Get, Post}

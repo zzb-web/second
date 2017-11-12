@@ -1,6 +1,7 @@
 import React from 'react';
-import {Button ,Select, Input ,Icon} from 'antd';
+import {Button ,Select, InputNumber ,Icon} from 'antd';
 import Tables from '../Table/index.js';
+import {Get , Post} from '../../fetch/data.js';
 import './style.css'
 const Option = Select.Option;
 const columns = [{
@@ -25,34 +26,16 @@ const columns = [{
     className: 'column-section',
     dataIndex: 'section',
   }];
-  const data =[
-        {
-            key: '1',
-            id: 17005,
-            page: 1,
-            chapter:'',
-            section:''
-          },
-          {
-            key: '2',
-            id: 17006,
-            page: 1,
-            chapter:'',
-            section:''
-          },
-          {
-            key: '3',
-            id: 17007,
-            page: 2,
-            chapter:'',
-            section:''
-          }
-  ]
 class ChapterTable extends React.Component{
     constructor(){
         super();
         this.state={
-            showPrompt: false
+            showPrompt: false,
+            maxPages : 0,
+            books : [],
+            bookId : 0,
+            page : 0,
+            data : []
         }
     }
     submitHnadle(){
@@ -65,22 +48,71 @@ class ChapterTable extends React.Component{
             showPrompt : false
         })
     }
+    bookChange(value){
+        this.state.books.map((book,i)=>{
+            if(book.ID === value){
+                this.setState({
+                    maxPages : book.TotalPage
+                })
+            }
+        })
+        this.setState({
+            bookId : Number(value)
+        })
+    }
+    pageChange(value){
+        this.setState({
+            page : Number(value)
+        })
+    }
+    searchHandle(){
+        const {bookId,page} = this.state;
+        var params;
+        if(page === 0){
+            params = new FormData();
+            params.append('BookID',bookId);
+            params.append('UserID',1);
+        }else{
+            params = new FormData();
+            params.append('BookID',bookId);
+            params.append('UserID',1);
+            params.append('Page',page-1);
+            params.append('PageSize',3);
+        }
+        let data = Post('/bookchapter/query',params);
+        data.then((response)=>{
+            this.setState({
+                data : response.data.data
+            })
+        })
+        
+    }
     render(){
+        const {books,bookId,page,maxPages, data} = this.state;
+        var tableData = data.Data || [];
+        var  dataResource = [];
+        tableData.map((item,index)=>{
+            dataResource.push(
+                {
+                    key: index,
+                    id: item.AssistCode,
+                    page: item.Page,
+                    chapter:item.Chapter ==='-1'?'': item.Chapter,
+                    section:item.Section ==='-1'?'': item.Section
+                  }
+            )
+        })
         return(
             <div>
                 <div className='control-area'>
                     <div className='title'><span>新增图书/章节表</span></div>
                     <div className='content'>
                         <span>范围:</span>
-                        <Select style={{width:320,marginLeft:10}}>
-                            <Option value="1">七上辅导书</Option>
-                            <Option value="2">七上课本</Option>
-                            <Option value="3">七上新编基础训练通用版S</Option>
-                            <Option value="4">七上新编基础训练沪科版</Option>
-                            <Option value="5">七上同步训练k</Option>
+                        <Select style={{width:320,marginLeft:10}} onChange={this.bookChange.bind(this)}>
+                           {books.map((book,index)=><Option value={book.ID} key={index}>{book.BookName}</Option>)}
                         </Select>
-                        <Input placeholder='页码' style={{width:60,marginLeft:20}}/>
-                        <Button type="primary" style={{marginLeft:20}}>搜索</Button>
+                        <InputNumber placeholder='页码' min={0} max={maxPages} style={{width:60,marginLeft:20}} onChange={this.pageChange.bind(this)}/>
+                        <Button type="primary" style={{marginLeft:20}} onClick={this.searchHandle.bind(this)}>搜索</Button>
                         <Button type="primary" style={{marginLeft:120}}>暂存</Button>
                         <Button type="primary" style={{marginLeft:30}} onClick={this.submitHnadle.bind(this)}>提交</Button>
 
@@ -102,10 +134,18 @@ class ChapterTable extends React.Component{
                    
                 </div>
                 <div className='table-content'>
-                    <Tables columns={columns} data={data} showSizeChanger={false}/>
+                    <Tables columns={columns} data={dataResource} showSizeChanger={false}/>
                 </div>
             </div>
         )
+    }
+    componentDidMount(){
+        let data = Get('/book/query');
+        data.then((response)=>{
+            this.setState({
+                books:response.data
+            })
+        })
     }
 }
 
