@@ -62,3 +62,6 @@
 .prompt-btn button:last-child {
     margin-left: 15px;
 }
+.ant-table{
+    height: 220px;
+}

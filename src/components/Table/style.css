@@ -6,8 +6,11 @@
     text-align: center;
 }
 .ant-table-pagination{
-    margin-right: 118px !important;
-    margin-top: 250px !important;
+    /* margin-right: 118px !important; */
+    /* margin-top: 250px !important; */
+    position: absolute;
+    left: 120px;
+    top: 350px;
 }
 .ant-table-thead > tr > th, .ant-table-tbody > tr > td{
     padding: 0px 8px !important;

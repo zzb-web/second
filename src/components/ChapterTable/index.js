@@ -35,8 +35,12 @@ class ChapterTable extends React.Component{
             books : [],
             bookId : 0,
             page : 0,
-            data : []
+            data : [],
+            pageSize:5,
+            currentPage:1,
+            oldData : []
         }
+        this.modifyValue = this.modifyValue.bind(this);
     }
     submitHnadle(){
         this.setState({
@@ -66,7 +70,7 @@ class ChapterTable extends React.Component{
         })
     }
     searchHandle(){
-        const {bookId,page} = this.state;
+        const {bookId,page,currentPage,pageSize} = this.state;
         var params;
         if(page === 0){
             params = new FormData();
@@ -76,29 +80,105 @@ class ChapterTable extends React.Component{
             params = new FormData();
             params.append('BookID',bookId);
             params.append('UserID',1);
-            params.append('Page',page-1);
-            params.append('PageSize',3);
+            params.append('BookPage',page);
+            params.append('Page',currentPage);
+            params.append('PageSize',pageSize);
         }
-        let data = Post('/bookchapter/query',params);
+        let data = Post('http://47.96.20.101:8080/bookchapter/query',params);
         data.then((response)=>{
+            var oldData = JSON.parse(JSON.stringify(response.data.data));
             this.setState({
-                data : response.data.data
+                data : response.data.data,
+                oldData : oldData,
+                totalPage : response.data.data.length       
             })
         })
-        
+    }
+    currentPage(currentPage,pageSize){
+        console.log(currentPage,pageSize);
+        this.setState({
+            currentPage : currentPage,
+            pageSize : pageSize
+        })
+        const {bookId,page} = this.state;
+        var params;
+        if(page!== 0){
+            params = new FormData();
+            params.append('BookID',bookId);
+            params.append('UserID',1);
+            params.append('BookPage',page);
+            params.append('Page',currentPage);
+            params.append('PageSize',pageSize);
+
+            let data = Post('http://47.96.20.101:8080/bookchapter/query',params);
+            data.then((response)=>{
+                this.setState({
+                    data : response.data.data,
+                    totalPage : response.data.data.length       
+                })
+            })
+        }
+    }
+    modifyValue(e,value){
+        let changedAssistCode = e[1];
+        let changedLocation = e[0];
+        let changedValue = value;
+        var data = this.state.data;
+        data.Data.map((item,inex)=>{
+            if(item.AssistCode === changedAssistCode){
+                item[changedLocation] = changedValue;
+            }
+        })
+        this.setState({
+            data : data
+        })
+    }
+    temporaryHandle(){
+        var newData = [];
+        const {oldData, data} = this.state;
+        oldData.Data.map((item,index)=>{
+            for(var key in item){
+                if(item[key] !==data.Data[index][key]){
+                    // newData.push(data.Data[index])
+                    // console.log(oldData.Data[index]);
+                    //在列表中，将-1直接显示出来，就不用考虑undefined的情况了
+                    console.log(data.Data[index]);
+                }
+                // if(key ==='Section' && item[key] !==data.Data[index][key]){
+                //     console.log(data.Data[index])
+                // }
+                
+            }
+        })
+
+        // newData.map((item,index)=>{
+        //     delete item.AssistCode;
+        //     delete item.BookID;
+        //     delete item.Conflict;
+        //     delete item.Page;
+        //     delete item.UserID;
+        // })
+        // var params ={
+        //     "data": [
+
+        //      ]
+        //  }
+        // console.log(newData)
+        // var msg = Post('http://47.96.20.101:8080/bookchapter/tempsave',params)
     }
     render(){
         const {books,bookId,page,maxPages, data} = this.state;
+        console.log(data);
         var tableData = data.Data || [];
-        var  dataResource = [];
+        var dataResource = [];
         tableData.map((item,index)=>{
             dataResource.push(
                 {
                     key: index,
                     id: item.AssistCode,
                     page: item.Page,
-                    chapter:item.Chapter ==='-1'?'': item.Chapter,
-                    section:item.Section ==='-1'?'': item.Section
+                    chapter:item.Chapter ==='-1'?<InputNumber value='' onChange={this.modifyValue.bind(this,['Chapter',item.AssistCode])}/>: <InputNumber value={item.Chapter} onChange={this.modifyValue.bind(this,['Chapter',item.AssistCode])}/>,
+                    section:item.Section ==='-1'?<InputNumber value='' onChange={this.modifyValue.bind(this,['Section',item.AssistCode])}/>: <InputNumber value={item.Section} onChange={this.modifyValue.bind(this,['Section',item.AssistCode])}/>,
                   }
             )
         })
@@ -113,7 +193,7 @@ class ChapterTable extends React.Component{
                         </Select>
                         <InputNumber placeholder='页码' min={0} max={maxPages} style={{width:60,marginLeft:20}} onChange={this.pageChange.bind(this)}/>
                         <Button type="primary" style={{marginLeft:20}} onClick={this.searchHandle.bind(this)}>搜索</Button>
-                        <Button type="primary" style={{marginLeft:120}}>暂存</Button>
+                        <Button type="primary" style={{marginLeft:120}} onClick={this.temporaryHandle.bind(this)}>暂存</Button>
                         <Button type="primary" style={{marginLeft:30}} onClick={this.submitHnadle.bind(this)}>提交</Button>
 
                         <div className='prompt' style={this.state.showPrompt?{display:'block'}:{display:'none'}}>
@@ -134,13 +214,17 @@ class ChapterTable extends React.Component{
                    
                 </div>
                 <div className='table-content'>
-                    <Tables columns={columns} data={dataResource} showSizeChanger={false}/>
+                    <Tables columns={columns} 
+                            data={dataResource} 
+                            showSizeChanger={false} 
+                            totalPage={maxPages} 
+                            currentPage={this.currentPage.bind(this)}/>
                 </div>
             </div>
         )
     }
     componentDidMount(){
-        let data = Get('/book/query');
+        let data = Get('http://47.96.20.101:8080/book/query');
         data.then((response)=>{
             this.setState({
                 books:response.data
