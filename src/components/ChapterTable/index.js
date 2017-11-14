@@ -47,6 +47,49 @@ class ChapterTable extends React.Component{
             showPrompt : true
         })
     }
+    okHandle(){
+        var newData = [];
+        const {oldData, data ,bookId} = this.state;
+        oldData.Data.map((item,index)=>{
+            for(var key in item){
+                if(item[key] !==data.Data[index][key]){
+                    newData.push(data.Data[index]);
+                }
+            }
+        })
+        var modifyDataString = [];
+        newData.map((item,index)=>{
+            if(modifyDataString.indexOf(JSON.stringify(item))===-1){
+                modifyDataString.push(JSON.stringify(item))
+            }
+        })
+        var finalData = [];
+        modifyDataString.map((item,index)=>{
+            finalData.push(JSON.parse(item))
+        })
+        var postData = JSON.parse(JSON.stringify(finalData));
+        postData.map((item,index)=>{
+            delete item.AssistCode;
+            delete item.BookID;
+            delete item.Conflict;
+            delete item.Page;
+            delete item.UserID;
+        })
+        let params = {
+            "BookID" : String(bookId),
+            "UserID" : "1",
+            "Data"   : postData
+        }
+        console.log(params)
+        let result = Post('http://47.96.20.101:8080/bookchapter/commit',params);
+        result.then((response)=>{
+            if(response.data.success){
+                this.setState({
+                    showPrompt : false
+                })
+            }
+        })
+    }
     cancelHandle(){
         this.setState({
             showPrompt : false
@@ -89,13 +132,11 @@ class ChapterTable extends React.Component{
             var oldData = JSON.parse(JSON.stringify(response.data.data));
             this.setState({
                 data : response.data.data,
-                oldData : oldData,
-                totalPage : response.data.data.length       
+                oldData : oldData,     
             })
         })
     }
     currentPage(currentPage,pageSize){
-        console.log(currentPage,pageSize);
         this.setState({
             currentPage : currentPage,
             pageSize : pageSize
@@ -113,8 +154,7 @@ class ChapterTable extends React.Component{
             let data = Post('http://47.96.20.101:8080/bookchapter/query',params);
             data.then((response)=>{
                 this.setState({
-                    data : response.data.data,
-                    totalPage : response.data.data.length       
+                    data : response.data.data,     
                 })
             })
         }
@@ -122,13 +162,19 @@ class ChapterTable extends React.Component{
     modifyValue(e,value){
         let changedAssistCode = e[1];
         let changedLocation = e[0];
-        let changedValue = value;
+        let changedValue;
+        if(value === undefined){
+            changedValue = '-1'
+        }else{
+            changedValue = value+'';
+        }
         var data = this.state.data;
         data.Data.map((item,inex)=>{
             if(item.AssistCode === changedAssistCode){
                 item[changedLocation] = changedValue;
             }
         })
+        console.log('modify',data);
         this.setState({
             data : data
         })
@@ -139,32 +185,33 @@ class ChapterTable extends React.Component{
         oldData.Data.map((item,index)=>{
             for(var key in item){
                 if(item[key] !==data.Data[index][key]){
-                    // newData.push(data.Data[index])
-                    // console.log(oldData.Data[index]);
-                    //在列表中，将-1直接显示出来，就不用考虑undefined的情况了
-                    console.log(data.Data[index]);
+                    newData.push(data.Data[index]);
                 }
-                // if(key ==='Section' && item[key] !==data.Data[index][key]){
-                //     console.log(data.Data[index])
-                // }
-                
             }
         })
-
-        // newData.map((item,index)=>{
-        //     delete item.AssistCode;
-        //     delete item.BookID;
-        //     delete item.Conflict;
-        //     delete item.Page;
-        //     delete item.UserID;
-        // })
-        // var params ={
-        //     "data": [
-
-        //      ]
-        //  }
-        // console.log(newData)
-        // var msg = Post('http://47.96.20.101:8080/bookchapter/tempsave',params)
+        var modifyDataString = [];
+        newData.map((item,index)=>{
+            if(modifyDataString.indexOf(JSON.stringify(item))===-1){
+                modifyDataString.push(JSON.stringify(item))
+            }
+        })
+        var finalData = [];
+        modifyDataString.map((item,index)=>{
+            finalData.push(JSON.parse(item))
+        })
+        console.log('xxxxxxxx',finalData);
+        var postData = JSON.parse(JSON.stringify(finalData));
+        postData.map((item,index)=>{
+            delete item.AssistCode;
+            delete item.BookID;
+            delete item.Conflict;
+            delete item.Page;
+            delete item.UserID;
+        })
+        var params ={
+            "data": postData
+         }
+       Post('http://47.96.20.101:8080/bookchapter/tempsave',params);
     }
     render(){
         const {books,bookId,page,maxPages, data} = this.state;
@@ -205,7 +252,7 @@ class ChapterTable extends React.Component{
                                 <span>提交后空格信息会自动填充</span>
                             </div>
                             <div className='prompt-btn'>
-                                <Button type="primary">确定</Button>
+                                <Button type="primary" onClick={this.okHandle.bind(this)}>确定</Button>
                                 <Button onClick={this.cancelHandle.bind(this)}>取消</Button>
                             </div>
                         </div>
