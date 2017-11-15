@@ -165,8 +165,10 @@ class ChapterTable extends React.Component{
 
             let data = Post('http://47.96.20.101:8080/bookchapter/query',params);
             data.then((response)=>{
+                var oldData = JSON.parse(JSON.stringify(response.data.data));
                 this.setState({
-                    data : response.data.data,     
+                    data : response.data.data, 
+                    oldData : oldData,    
                 })
             })
         }
