@@ -1,5 +1,5 @@
 import React from 'react';
-import {Button ,Select, InputNumber ,Icon} from 'antd';
+import {Button ,Select, InputNumber ,Icon,message} from 'antd';
 import Tables from '../Table/index.js';
 import {Get , Post} from '../../fetch/data.js';
 import './style.css'
@@ -38,7 +38,8 @@ class ChapterTable extends React.Component{
             data : [],
             pageSize:5,
             currentPage:1,
-            oldData : []
+            oldData :{Data:[]},
+            totalPage : 0
         }
         this.modifyValue = this.modifyValue.bind(this);
     }
@@ -69,26 +70,36 @@ class ChapterTable extends React.Component{
         })
         var postData = JSON.parse(JSON.stringify(finalData));
         postData.map((item,index)=>{
-            delete item.AssistCode;
+            // delete item.AssistCode;
             delete item.BookID;
             delete item.Conflict;
             delete item.Page;
             delete item.UserID;
         })
-        let params = {
-            "BookID" : String(bookId),
-            "UserID" : "1",
-            "Data"   : postData
-        }
-        console.log(params)
-        let result = Post('http://47.96.20.101:8080/bookchapter/commit',params);
-        result.then((response)=>{
-            if(response.data.success){
-                this.setState({
-                    showPrompt : false
-                })
+        var warningAssistCode = [];
+        postData.map((item,index)=>{
+            if(item.Chapter ==='-1' || item.Section === '-1'){
+                warningAssistCode.push(item.AssistCode)
             }
         })
+        if(warningAssistCode.length === 0){
+            let params = {
+                "BookID" : String(bookId),
+                "UserID" : "1",
+                "Data"   : postData
+            }
+            let result = Post('http://47.96.20.101:8080/bookchapter/commit',params);
+            result.then((response)=>{
+                if(response.data.success){
+                    this.setState({
+                        showPrompt : false
+                    })
+                    message.success('提交成功', 2)
+                }
+            })
+        }else{
+           message.error(warningAssistCode.toString()+'填写不完整',5);
+        }
     }
     cancelHandle(){
         this.setState({
@@ -132,7 +143,8 @@ class ChapterTable extends React.Component{
             var oldData = JSON.parse(JSON.stringify(response.data.data));
             this.setState({
                 data : response.data.data,
-                oldData : oldData,     
+                oldData : oldData,
+                totalPage : response.data.Total  
             })
         })
     }
@@ -174,7 +186,7 @@ class ChapterTable extends React.Component{
                 item[changedLocation] = changedValue;
             }
         })
-        console.log('modify',data);
+        // console.log('modify',data);
         this.setState({
             data : data
         })
@@ -182,6 +194,7 @@ class ChapterTable extends React.Component{
     temporaryHandle(){
         var newData = [];
         const {oldData, data} = this.state;
+        // console.log('xxx',oldData)
         oldData.Data.map((item,index)=>{
             for(var key in item){
                 if(item[key] !==data.Data[index][key]){
@@ -199,7 +212,7 @@ class ChapterTable extends React.Component{
         modifyDataString.map((item,index)=>{
             finalData.push(JSON.parse(item))
         })
-        console.log('xxxxxxxx',finalData);
+        // console.log('xxxxxxxx',finalData);
         var postData = JSON.parse(JSON.stringify(finalData));
         postData.map((item,index)=>{
             delete item.AssistCode;
@@ -211,11 +224,16 @@ class ChapterTable extends React.Component{
         var params ={
             "data": postData
          }
-       Post('http://47.96.20.101:8080/bookchapter/tempsave',params);
+       var msg = Post('http://47.96.20.101:8080/bookchapter/tempsave',params);
+       msg.then((response)=>{
+           if(response.data.success){
+            message.success('暂存成功', 2)
+           }
+       })
     }
     render(){
-        const {books,bookId,page,maxPages, data} = this.state;
-        console.log(data);
+        const {books,bookId,page,maxPages, data,totalPage} = this.state;
+        // console.log(data);
         var tableData = data.Data || [];
         var dataResource = [];
         tableData.map((item,index)=>{
@@ -264,7 +282,7 @@ class ChapterTable extends React.Component{
                     <Tables columns={columns} 
                             data={dataResource} 
                             showSizeChanger={false} 
-                            totalPage={maxPages} 
+                            totalPage={totalPage} 
                             currentPage={this.currentPage.bind(this)}/>
                 </div>
             </div>

@@ -16,8 +16,8 @@ class Tables extends Component{
                     bordered
                     pagination={{
                             total: totalPage,
-                            pageSize: 5,
-                            defaultPageSize:5,
+                            pageSize: 10,
+                            defaultPageSize:10,
                             showQuickJumper : true,
                             showSizeChanger: this.props.showSizeChanger,
                             pageSizeOptions:['5','10']
